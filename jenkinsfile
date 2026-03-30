@@ -1,0 +1,35 @@
+pipeline {
+    agent any
+
+    stages {
+
+        stage('Clone Code') {
+            steps {
+                git 'https://github.com/Yeshasgowda46/node-js-app'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t node-app .'
+            }
+        }
+
+        stage('Push to DockerHub') {
+            steps {
+                sh 'docker tag node-app yashasgowdads/node-app'
+                sh 'docker push yashasgowdads/node-app'
+            }
+        }
+
+        stage('Deploy Container') {
+            steps {
+                sh '''
+                docker stop node-app-container || true
+                docker rm node-app-container || true
+                docker run -d -p 4000:3000 --name node-app-container yashasgowdads/node-app
+                '''
+            }
+        }
+    }
+}
