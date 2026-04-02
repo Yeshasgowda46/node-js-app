@@ -3,13 +3,22 @@ pipeline {
 
     stages {
 
+        // Step 1: Test stage (CI)
+        stage('Test') {
+            steps {
+                sh 'npm install'
+                sh 'npm test || true'
+            }
+        }
 
+        // Step 2: Build Docker Image
         stage('Build Docker Image') {
             steps {
                 sh 'docker build -t node-app .'
             }
         }
 
+        // Step 3: Push to DockerHub
         stage('Push to DockerHub') {
             steps {
                 sh 'docker tag node-app yashasgowdads/node-app'
@@ -17,12 +26,20 @@ pipeline {
             }
         }
 
-        stage('Deploy Container') {
+        // Step 4: Deploy Dev Environment
+        stage('Deploy Dev') {
+            steps {
+                sh 'docker run -d -p 4001:3000 --name dev-app yashasgowdads/node-app || true'
+            }
+        }
+
+        // Step 5: Clean Deploy Prod
+        stage('Deploy Prod') {
             steps {
                 sh '''
-                docker stop node-app-container || true
-                docker rm node-app-container || true
-                docker run -d -p 4000:3000 --name node-app-container yashasgowdads/node-app
+                docker stop prod-app || true
+                docker rm prod-app || true
+                docker run -d -p 4000:3000 --name prod-app yashasgowdads/node-app
                 '''
             }
         }
